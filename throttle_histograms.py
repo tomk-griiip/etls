@@ -6,7 +6,7 @@
 
 import getopt
 import sys
-
+import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
@@ -32,6 +32,12 @@ def print_help():
 
 
 def show_plot(_session_identifier, _classification, _remote=False):
+    """
+    if script run from remote server allow x11 forwarding
+    """
+    if _remote:
+        matplotlib.use('tkagg')
+
     """
         init mysql instance
     """
