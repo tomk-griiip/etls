@@ -16,10 +16,11 @@ import mysql_handler
 
 
 def print_help():
-    print('-h \ --help    printing help menu')
-    print('-i \ --idSession    insert session id this or nameSession is mandatory')
-    print('-n \ --nameSession    insert session name this or idSession is mandatory')
-    print('-c \ --classification    insert classification mandatory')
+    print('-h \\ --help    printing help menu')
+    print('-i \\ --idSession    insert session id this or nameSession is mandatory')
+    print('-n \\ --nameSession    insert session name this or idSession is mandatory')
+    print('-c \\ --classification    insert classification mandatory')
+    print('-r \\ --remote    use this when execute the script from remote server')
     print('--fields=    insert string of fields to query from driverlapsrundata')
 
     """
@@ -30,7 +31,7 @@ def print_help():
     """
 
 
-def show_plot(_session_identifier, classification):
+def show_plot(_session_identifier, _classification, _remote=False):
     """
         init mysql instance
     """
@@ -51,11 +52,13 @@ def show_plot(_session_identifier, classification):
     query lap name from driverlaps table that was in the relevant session by the end and start date of the session
     """
     lapNames_query = "SELECT LapName FROM griiip_dev_staging.driverlaps WHERE classification = {} and lapStartDate between %s and %s".format(
-        "'" + classification + "'")
+        "'" + _classification + "'")
     mycursor.execute(lapNames_query, (session_start_time, session_end_date))
     lapsNames = mycursor.fetchall()
 
-    lapNamesArr = [x['LapName'] for x in lapsNames][1:10]  # create lapsNames array
+    lapNamesArr = [x['LapName'] for x in lapsNames]
+    if _remote is False:
+        lapNamesArr = lapNamesArr[1:10]  # create lapsNames array
     _lapNames_tuple = tuple(lapNamesArr)  # convert the array to tuple
 
     """
@@ -67,7 +70,7 @@ def show_plot(_session_identifier, classification):
     """
     create pandas dataFrame from the runData_sql results to be able to show on plots
     """
-    sqlEngine = create_engine(db.get_connection_string()) # using sqlalchemy to query 
+    sqlEngine = create_engine(db.get_connection_string())  # using sqlalchemy to query
     dbConnection = sqlEngine.connect()
     frame = pd.read_sql(runData_sql, dbConnection)
 
@@ -90,18 +93,20 @@ def show_plot(_session_identifier, classification):
     plt.show()
 
 
-CLASSIFICATION_ARR = ['competitive', 'Competitive', 'Partial', 'NonCompetitive', 'Non-Successful', 'NonLegit', 'Verified']
+CLASSIFICATION_ARR = ['competitive', 'Competitive', 'Partial', 'NonCompetitive', 'Non-Successful', 'NonLegit',
+                      'Verified']
 
 if __name__ == '__main__':
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "i:n:c:h",
-                                   ["idSession=", "nameSession=", "classification=", 'help', 'fields='])
+        opts, args = getopt.getopt(sys.argv[1:], "i:n:c:h:r",
+                                   ["idSession=", "nameSession=", "classification=", 'help', 'remote' 'fields='])
 
     except getopt.GetoptError as go_error:
         print("getopt error : ", go_error)
         sys.exit(2)
 
     session_identifier = classification = fields = None
+    remote = False
     for opt, arg in opts:
         if opt in ('-i', '--idSession'):
             session_identifier = 'id = ' + arg
@@ -123,5 +128,7 @@ if __name__ == '__main__':
         if opt in ('-h', '--help'):
             print_help()
             sys.exit(0)
+        if opt in ('-r', '--remote'):
+            remote = True
 
-    show_plot(session_identifier, classification)
+    show_plot(session_identifier, classification, remote)
