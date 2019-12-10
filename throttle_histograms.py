@@ -115,8 +115,8 @@ CLASSIFICATION_ARR = ['competitive', 'Competitive', 'Partial', 'NonCompetitive',
 
 if __name__ == '__main__':
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "i:n:c:h:r:l",
-                                   ["idSession=", "nameSession=", "classification=", 'help', 'remote', 'legend', 'hist', 'fields='])
+        opts, args = getopt.getopt(sys.argv[1:], "i:n:c:h:l:r",
+                                   ["idSession=", "nameSession=", "classification=", 'help', 'legend', 'remote', 'hist', 'fields='])
 
     except getopt.GetoptError as go_error:
         print("getopt error : ", go_error)
