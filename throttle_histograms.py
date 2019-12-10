@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 from sqlalchemy import *
-
+import statistics
 import mysql_handler
 
 
@@ -21,6 +21,7 @@ def print_help():
     print('-n \\ --nameSession    insert session name this or idSession is mandatory')
     print('-c \\ --classification    insert classification mandatory')
     print('-r \\ --remote    use this when execute the script from remote server')
+    print('--hist \\ if add to the commend --hist histogram will be shown on the plot')
     print('--fields=    insert string of fields to query from driverlapsrundata')
 
     """
@@ -31,7 +32,7 @@ def print_help():
     """
 
 
-def show_plot(_session_identifier, _classification, _remote=False):
+def show_plot(_session_identifier, _classification, _remote=False, _hist=False):
     """
     if script run from remote server allow x11 forwarding
     """
@@ -57,45 +58,48 @@ def show_plot(_session_identifier, _classification, _remote=False):
     """
     query lap name from driverlaps table that was in the relevant session by the end and start date of the session
     """
-    lapNames_query = "SELECT LapName FROM griiip_dev_staging.driverlaps WHERE classification = {} and lapStartDate between %s and %s".format(
+    lapNames_query = "SELECT lapName, lapTime FROM griiip_dev_staging.driverlaps WHERE classification = {} and lapStartDate between %s and %s".format(
         "'" + _classification + "'")
     mycursor.execute(lapNames_query, (session_start_time, session_end_date))
-    lapsNames = mycursor.fetchall()
-
-    lapNamesArr = [x['LapName'] for x in lapsNames]
+    laps_from_driverLaps = mycursor.fetchall()
+    lapsDict = {lap['lapName']: str(lap['lapTime']) for lap in laps_from_driverLaps}
+    lapNames = [x['lapName'] for x in laps_from_driverLaps]
     if _remote is False:
-        lapNamesArr = lapNamesArr[1:10]  # create lapsNames array
-    _lapNames_tuple = tuple(lapNamesArr)  # convert the array to tuple
+        lapNames = lapNames[1:10]  # create laps_from_driverLaps array
+    _lapNames_tuple = tuple(lapNames)  # convert the array to tuple
 
     """
     create query to select lap name and require fields ( throttle ) from driverlapsrundata table 
     """
-    runData_sql = 'SELECT throttle, lapName FROM griiip_dev_staging.driverlapsrundata where lapName IN {} order by lapName'.format(
+    runData_sql_for_dataFrame = 'SELECT throttle, lapName FROM griiip_dev_staging.driverlapsrundata where lapName IN {} order by lapName'.format(
         _lapNames_tuple)
 
     """
-    create pandas dataFrame from the runData_sql results to be able to show on plots
+    create pandas dataFrame from the runData_sql_for_dataFrame results to be able to show on plots
     """
     sqlEngine = create_engine(db.get_connection_string())  # using sqlalchemy to query
     dbConnection = sqlEngine.connect()
-    frame = pd.read_sql(runData_sql, dbConnection)
+    frame = pd.read_sql(runData_sql_for_dataFrame, dbConnection)
 
-    print("first 10 results")
-    print(frame.head(10))
-    print("last 10 results")
-    print(frame.tail(10))
+    """
+    log all laps with the lap time 
+    """
+    print('laps logs:')
+    print(*lapsDict.items(), sep='\n')
 
-    for lap in lapNamesArr:
+    for lap in lapNames:
         subset = frame[frame['lapName'] == lap]
         # Draw the density plot
-        sns.distplot(subset['throttle'], hist=False, kde=True,
-                     kde_kws={'linewidth': 1},
-                     label=lap)
+        sns.distplot(subset['throttle'], hist=_hist, kde=True,
+                     kde_kws={'linewidth': 1})
+        # ,label=lap)
     # Plot formatting
-    plt.legend(prop={'size': 16}, title='laps')
+    # plt.legend(prop={'size': 16}, title='laps')
     plt.title('Density Plot with Multiple laps')
-    plt.xlabel('Delay (min)')
-    plt.ylabel('Density')
+    plt.xlabel('throttle')
+    plt.ylabel('num of laps')
+    # fig = plt.figure()
+    # fig.savefig('temp.png', transparent=True)
     plt.show()
 
 
@@ -105,14 +109,14 @@ CLASSIFICATION_ARR = ['competitive', 'Competitive', 'Partial', 'NonCompetitive',
 if __name__ == '__main__':
     try:
         opts, args = getopt.getopt(sys.argv[1:], "i:n:c:h:r",
-                                   ["idSession=", "nameSession=", "classification=", 'help', 'remote' 'fields='])
+                                   ["idSession=", "nameSession=", "classification=", 'help', 'remote', 'hist', 'fields='])
 
     except getopt.GetoptError as go_error:
         print("getopt error : ", go_error)
         sys.exit(2)
 
     session_identifier = classification = fields = None
-    remote = False
+    hist = remote = False
     for opt, arg in opts:
         if opt in ('-i', '--idSession'):
             session_identifier = 'id = ' + arg
@@ -136,5 +140,8 @@ if __name__ == '__main__':
             sys.exit(0)
         if opt in ('-r', '--remote'):
             remote = True
+        if opt in '--hist':
+            hist = True
+            print('hist ', hist)
 
-    show_plot(session_identifier, classification, remote)
+    show_plot(session_identifier, classification, remote, hist)
