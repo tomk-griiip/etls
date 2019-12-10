@@ -21,6 +21,7 @@ def print_help():
     print('-n \\ --nameSession    insert session name this or idSession is mandatory')
     print('-c \\ --classification    insert classification mandatory')
     print('-r \\ --remote    use this when execute the script from remote server')
+    print('-l \\ --legend   add legend to the plot')
     print('--hist \\ if add to the commend --hist histogram will be shown on the plot')
     print('--fields=    insert string of fields to query from driverlapsrundata')
 
@@ -32,7 +33,7 @@ def print_help():
     """
 
 
-def show_plot(_session_identifier, _classification, _remote=False, _hist=False):
+def show_plot(_session_identifier, _classification, _remote=False, _hist=False, _legend=False):
     """
     if script run from remote server allow x11 forwarding
     """
@@ -92,11 +93,15 @@ def show_plot(_session_identifier, _classification, _remote=False, _hist=False):
     for lap in lapNames:
         subset = frame[frame['lapName'] == lap]
         # Draw the density plot
-        sns.distplot(subset['throttle'], hist=_hist, kde=True,
-                     kde_kws={'linewidth': 1})
+        if _legend:
+            sns.distplot(subset['throttle'], hist=_hist, kde=True,
+                         kde_kws={'linewidth': 1}, label=lap)
+            plt.legend(prop={'size': 16}, title='laps')
+        else:
+            sns.distplot(subset['throttle'], hist=_hist, kde=True,
+                         kde_kws={'linewidth': 1})
         # ,label=lap)
-    # Plot formatting
-    # plt.legend(prop={'size': 16}, title='laps')
+
     plt.title('Density Plot with Multiple laps')
     plt.xlabel('throttle')
     plt.ylabel('num of laps')
@@ -110,15 +115,15 @@ CLASSIFICATION_ARR = ['competitive', 'Competitive', 'Partial', 'NonCompetitive',
 
 if __name__ == '__main__':
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "i:n:c:h:r",
-                                   ["idSession=", "nameSession=", "classification=", 'help', 'remote', 'hist', 'fields='])
+        opts, args = getopt.getopt(sys.argv[1:], "i:n:c:h:r:l",
+                                   ["idSession=", "nameSession=", "classification=", 'help', 'remote', 'legend', 'hist', 'fields='])
 
     except getopt.GetoptError as go_error:
         print("getopt error : ", go_error)
         sys.exit(2)
 
     session_identifier = classification = fields = None
-    hist = remote = False
+    legend = hist = remote = False
     for opt, arg in opts:
         if opt in ('-i', '--idSession'):
             session_identifier = 'id = ' + arg
@@ -144,10 +149,11 @@ if __name__ == '__main__':
             remote = True
         if opt in '--hist':
             hist = True
-            print('hist ', hist)
+        if opt in ('-l', '--legend'):
+            legend = True
 
     try:
-        show_plot(session_identifier, classification, remote, hist)
+        show_plot(session_identifier, classification, remote, hist, legend)
     except Exception as e:
         print(e)
         sys.exit()
