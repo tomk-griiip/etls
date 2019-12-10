@@ -68,6 +68,8 @@ def show_plot(_session_identifier, _classification, _remote=False, _hist=False):
         lapNames = lapNames[1:10]  # create laps_from_driverLaps array
     _lapNames_tuple = tuple(lapNames)  # convert the array to tuple
 
+    if len(lapNames) == 0:
+        raise Exception('there is no laps in that session and _classification')
     """
     create query to select lap name and require fields ( throttle ) from driverlapsrundata table 
     """
@@ -144,4 +146,8 @@ if __name__ == '__main__':
             hist = True
             print('hist ', hist)
 
-    show_plot(session_identifier, classification, remote, hist)
+    try:
+        show_plot(session_identifier, classification, remote, hist)
+    except Exception as e:
+        print(e)
+        sys.exit()
