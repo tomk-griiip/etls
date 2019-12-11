@@ -59,7 +59,7 @@ def show_plot(_session_identifier, _classification, _remote=False, _hist=False, 
     """
     query lap name from driverlaps table that was in the relevant session by the end and start date of the session
     """
-    lapNames_query = "SELECT lapName, lapTime FROM griiip_dev_staging.driverlaps WHERE classification = {} and lapStartDate between %s and %s".format(
+    lapNames_query = "SELECT lapName, lapTime FROM driverlaps WHERE classification = {} and lapStartDate between %s and %s".format(
         "'" + _classification + "'")
     mycursor.execute(lapNames_query, (session_start_time, session_end_date))
     laps_from_driverLaps = mycursor.fetchall()
