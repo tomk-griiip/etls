@@ -77,9 +77,17 @@ def create_sessions(_db_sessions, _laps_by_start_date_dict):
     return _sessions
 
 
+def calculate_session_avg_score(driverAvgLap, sessionBestLap, sessionWorst2Lap):
+    try:
+        return ((1 - ((driverAvgLap - sessionBestLap) / (sessionWorst2Lap - sessionBestLap))) * 80) + 20
+    except ZeroDivisionError as ze:
+        print(f"avg error : ({driverAvgLap} - {sessionBestLap}) / ({sessionWorst2Lap} - {sessionBestLap})")
+        return 100
+
+
 def calculate_session_best_score(driverBestLap, sessionBestLap, sessionWorstLap):
     try:
         return ((1 - ((driverBestLap - sessionBestLap) / (sessionWorstLap - sessionBestLap))) * 80) + 20
     except ZeroDivisionError as ze:
-        print(driverBestLap - sessionBestLap, ' / ', sessionWorstLap - sessionBestLap)
+        print(f"best : {driverBestLap} - {sessionBestLap} ' / ' {sessionWorstLap} - {sessionBestLap})")
         return 100

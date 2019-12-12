@@ -51,7 +51,8 @@ class Session:
         self.startDate = start_date
         self.endDate = end_date
         self.bestLapTime = None
-        self.worstLap = None
+        self.worstLap = None  # the best lap of the worst driver
+        self.worstWorstLap = None  # the worst lap in the session
 
     @property
     def drivers(self):
@@ -60,9 +61,9 @@ class Session:
     @drivers.setter
     def drivers(self, driver):
         if driver is None:
-            self.__drivers = list()
+            self.__drivers = set()
         else:
-            self.__drivers.append(driver)
+            self.__drivers.add(driver)
 
     @property
     def laps(self):
@@ -77,3 +78,5 @@ class Session:
             self.__laps[lap.driver].sort(key=lambda _lap: _lap.lapTime, reverse=False)
             if not self.bestLapTime or lap.lapTime < self.bestLapTime:
                 self.bestLapTime = lap.lapTime
+            if not self.worstWorstLap or lap.lapTime >= self.worstWorstLap:
+                self.worstWorstLap = lap.lapTime
