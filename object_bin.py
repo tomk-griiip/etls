@@ -1,9 +1,25 @@
 from collections import defaultdict
 from math import inf
 
+
 class ZeroSessionException(Exception):
     """This exception is raised, when ther is no sessions in the db fails to start."""
     pass
+
+
+class DateNullException(TypeError):
+    def __init__(self, i, sessionId, startDate, endDate):
+        self.index, self.sessionId, self.startDate, self.endDate = i, sessionId, startDate, endDate
+        print(f"in session Id : {sessionId} start date or end date is null "
+              f"startDate = {startDate} endDate = {endDate}")
+
+
+class FiledSessionList(list):
+    def append(self, item):
+        if not isinstance(item, Session):
+            raise TypeError(f"item is not of type Session")
+        item = f"session id :{item.Id} have start date {item.startDate} and end date {item.endDate}\n"
+        super(FiledSessionList, self).append(item)  # append the item to itself (the list)
 
 
 class Lap:

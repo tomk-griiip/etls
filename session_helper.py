@@ -2,6 +2,7 @@ from collections import defaultdict
 from operator import itemgetter
 from itertools import groupby
 from object_bin import *
+import object_bin
 
 
 class ZeroSessionException(Exception):
@@ -47,12 +48,23 @@ def get_sessions_by_satrte_date(participants, betweenStr, myCursor):
     return dict((k, [(v[1], v[2], v[3]) for v in itr]) for k, itr in groupby(laps, itemgetter(0)))
 
 
+def write_to_file(file, lst):
+    with open(file, 'w+') as fp:
+        for line in lst:
+            fp.write(line)
+
+
 def create_sessions(_db_sessions, _laps_by_start_date_dict):
     _sessions = defaultdict(Session)
+    sessionsWithoutTime = FiledSessionList()
     for s in _db_sessions:
         sessionId = s['id']
         if sessionId not in _sessions.keys():
             session = Session(sessionId, s['timeStart'], s['timeEnd'])
+            is_date_missing = session.startDate is None or session.endDate is None
+            if is_date_missing:
+                sessionsWithoutTime.append(session)
+                continue
         else:
             session = _sessions[sessionId]
         for d in _laps_by_start_date_dict.keys():
@@ -62,5 +74,14 @@ def create_sessions(_db_sessions, _laps_by_start_date_dict):
                 if _lap.driver not in session.drivers:
                     session.drivers = _lap.driver
         _sessions[session.Id] = session
-
+    if len(sessionsWithoutTime) > 0:
+        write_to_file('filed_sessions.txt', sessionsWithoutTime)
     return _sessions
+
+
+def calculate_session_best_score(driverBestLap, sessionBestLap, sessionWorstLap):
+    try:
+        return ((1 - ((driverBestLap - sessionBestLap) / (sessionWorstLap - sessionBestLap))) * 80) + 20
+    except ZeroDivisionError as ze:
+        print(driverBestLap - sessionBestLap, ' / ', sessionWorstLap - sessionBestLap)
+        return 100

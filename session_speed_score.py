@@ -2,6 +2,8 @@ import mysql_handler
 import sys
 from session_helper import *
 from object_bin import *
+import os
+
 
 if __name__ == '__main__':
     db = mysql_handler.MysqlHandler()
@@ -26,8 +28,29 @@ if __name__ == '__main__':
                 continue
             m = max([t[0].lapTime for l, t in v.laps.items()])
             v.worstLap = m
-        print("hhh")
+        print("creating insert into sql file ")
 
+        useStr = f"use {os.getenv('db_name')};\n"
+        insertInToList = list([useStr])
+        for sessionId, session in sessions.items():
+            lapsByDriver = session.laps
+            for driver in session.drivers:
+                driverBestLap, sessionBestLap, sessionWorstLap = lapsByDriver[driver][0], \
+                                                                 session.bestLapTime, \
+                                                                 session.worstLap
+                score = calculate_session_best_score(driverBestLap.lapTime,
+                                                     sessionBestLap,
+                                                     sessionWorstLap)
+                insertInTo = f"insert into driverscoringhistory (userId, TrackSessionId, sessionSpeedScore)" \
+                             f"values({driver}, {sessionId},{score}) ON DUPLICATE KEY UPDATE sessionSpeedScore = " \
+                             f"{score};\n"
+                insertInToList.append(insertInTo)
+
+        print("writing to file ...")
+
+        write_to_file('sessionscore.sql', insertInToList)
+        print("done")
     except ZeroSessionException as zse:
         print(zse)
         sys.exit()
+
