@@ -1,7 +1,7 @@
 import mysql_handler
 import sys
-from session_helper import *
-from object_bin import *
+from session_speed.session_helper import *
+from session_speed.object_bin import *
 import os
 
 

@@ -1,8 +1,6 @@
-from collections import defaultdict
 from operator import itemgetter
 from itertools import groupby
-from object_bin import *
-import object_bin
+from session_speed.object_bin import *
 
 
 class ZeroSessionException(Exception):
