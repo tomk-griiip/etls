@@ -14,7 +14,7 @@ if __name__ == '__main__':
 
     db_sessions = db.get("""SELECT ts.timeStart, ts.timeEnd, ts.id FROM tracksessions as ts
                  left join trackevents as t_events on TrackEventId = t_events.id
-                 where sessionType = "Race" and SeriesId = 1;""", use_dict_cursor=True)
+                 where sessionType = "Race" and SeriesId = 1""", use_dict_cursor=True)
     try:
         if len(db_sessions) == 0:  # if there is no sessions raise exception
             raise ZeroSessionException('there is no sessions')

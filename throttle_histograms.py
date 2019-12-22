@@ -17,7 +17,8 @@ import mysql_handler
 
 def print_help():
     print('-h \\ --help    printing help menu')
-    print('-i \\ --idSession    insert session id this or nameSession is mandatory')
+    print('-i \\ --'
+          '    insert session id this or nameSession is mandatory')
     print('-n \\ --nameSession    insert session name this or idSession is mandatory')
     print('-c \\ --classification    insert classification mandatory')
     print('-r \\ --remote    use this when execute the script from remote server')

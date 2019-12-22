@@ -36,14 +36,17 @@ def get_sessions_by_satrte_date(participants, betweenStr, myCursor):
     """
     select users relevant laps time
     """
-    lapTime_userId_query = """ select lapStartDate, userId, lapTime, lapName from grip_test_new.driverlaps 
+    lapTime_userId_query = """ select lapStartDate, userId, lapTime, lapName from driverlaps 
                                 where classification = 'competitive' 
                                 and {}
                                 and UserId in {} order by UserId""".format(betweenStr, tuple(participants))
 
     myCursor.execute(lapTime_userId_query)
     laps = myCursor.fetchall()
-    return dict((k, [(v[1], v[2], v[3]) for v in itr]) for k, itr in groupby(laps, itemgetter(0)))
+    test = groupby(laps, itemgetter(0))
+    # return {v[0]: (v[1], v[2], v[3]) for v in laps}
+    return laps
+    #return dict((k, [(v[1], v[2], v[3]) for v in itr]) for k, itr in groupby(laps, itemgetter(0)))
 
 
 def write_to_file(file, lst):
@@ -65,9 +68,9 @@ def create_sessions(_db_sessions, _laps_by_start_date_dict):
                 continue
         else:
             session = _sessions[sessionId]
-        for d in _laps_by_start_date_dict.keys():
-            if session.startDate < d < session.endDate:
-                _lap = Lap(_laps_by_start_date_dict[d][0])
+        for d in _laps_by_start_date_dict:#.keys():
+            if session.startDate < d[0] < session.endDate:
+                _lap = Lap(d)#_laps_by_start_date_dict[d][0])
                 session.laps = _lap
                 if _lap.driver not in session.drivers:
                     session.drivers = _lap.driver

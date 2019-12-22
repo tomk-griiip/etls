@@ -25,9 +25,9 @@ class FiledSessionList(list):
 class Lap:
 
     def __init__(self, lap):
-        self._driver = lap[0]
-        self._lapTime = lap[1]
-        self._lapName = lap[2]
+        self._driver = lap[1]
+        self._lapTime = lap[2]
+        self._lapName = lap[3]
 
     @property
     def lapName(self):
